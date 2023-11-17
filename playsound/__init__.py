@@ -14,39 +14,53 @@ class SoundApp():
         self.mixer = pygame.mixer
         self.mixer.init()# initialise the pygame
         self.stop_playing = True
+        self.azan_playing = False
+
+    def play(self, file, is_azan=False):
+
+        if is_azan:
+            self.azan_playing = True
+        
+        self.mixer.music.load(file)
+        self.mixer.music.play()
+        while self.mixer.music.get_busy():
+            continue
+        self.azan_playing = False
  
     def playAll(self, file_list, playlist=None):
 
         self.stop_playing = False
-        for i in range(0, len(file_list)):
-            
-            if self.stop_playing:
-                break
 
-            self.mixer.music.load(file_list[i])
-            self.mixer.music.play()
+        if not self.azan_playing:
+            for i in range(0, len(file_list)):
+                
+                if self.stop_playing:
+                    break
 
-            while self.mixer.music.get_busy():
-                continue
+                self.mixer.music.load(file_list[i])
+                self.mixer.music.play()
 
-            # After song ends move selection tto next
-            if playlist != None :
-                selection = playlist.curselection()[0]
+                if self.azan_playing:
+                    break
 
-                print(selection , playlist.itemcount)
+                while self.mixer.music.get_busy():
+                    continue
 
-                if (selection+1) < playlist.itemcount:
-                    playlist.selection_clear(selection)
-                    playlist.selection_set(selection+1)
+                # After song ends move selection tto next
+                if playlist != None :
+                    selection = playlist.curselection()[0]
+
+                    if (selection+1) < playlist.itemcount:
+                        playlist.selection_clear(selection)
+                        playlist.selection_set(selection+1)
           
     def pause(self):
         self.mixer.music.pause()
         
-        
-
     def stop(self):
-        self.mixer.music.stop()
-        self.stop_playing = True
+        if not self.azan_playing:
+            self.mixer.music.stop()
+            self.stop_playing = True
 
 sound = SoundApp()
 

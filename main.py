@@ -1,5 +1,6 @@
 import tkinter as tk
 from playsound import sound, PlayList, play_quran, quran_list_dir, song_list_dir
+from schedules import Schedules
 
 window_width = 600
 window_height = 500
@@ -213,7 +214,12 @@ class SongPage(tk.Frame):
         exit_btn = tk.Button(self, text="خروج", font=('Arial 14 bold'), width=10, height=1,
                              command=lambda: controller.destroy())
         exit_btn.place(relx=.8, rely=.9, anchor="center")
+
+
 def main():
+    sc = Schedules(30.033333,31.233334,2)
+    sc.schedule_prayers()
+    
     app = tkinterApp()
 
     app.mainloop()
@@ -221,7 +227,7 @@ def main():
     # check to end music thread
     if sound.mixer.music.get_busy():
         sound.stop()
-
+   
 
 if __name__ == "__main__":
     main()
