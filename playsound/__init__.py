@@ -1,10 +1,13 @@
-import os
-from pathlib import Path
 from tkinter import Listbox
-import random
 import pygame
 from threading import Thread
-from time import sleep
+from datetime import datetime
+
+def findTime():
+    H = int(datetime.now().strftime('%H'))
+    M = int(datetime.now().strftime('%M'))
+    S = int(datetime.now().strftime('%S'))
+    return H, M, S
 
 class SoundApp():
 
@@ -27,6 +30,37 @@ class SoundApp():
             continue
         self.azan_playing = False
  
+    # Daily arr -> [a,b,c] 
+    # Single item is a tuple of file names and scheduled times
+    def playDaily(self, daily_arr):
+
+        for i in range(0, len(daily_arr)):
+            scheduled_time = daily_arr[i][1]
+            file_list = daily_arr[i][0]
+
+            H, M, S = findTime()
+            
+            if(H < scheduled_time[0] or H >= scheduled_time[1]):
+                continue
+
+            self.stop_playing = False
+
+            for i in range(0, len(file_list)):
+                
+                if self.stop_playing:
+                    break
+
+                self.mixer.music.load(file_list[i])
+                self.mixer.music.play()
+
+                if self.azan_playing:
+                    break
+
+                while self.mixer.music.get_busy():
+                    if(H < scheduled_time[0] or H >= scheduled_time[1]):
+                        break
+                    continue
+                        
     def playAll(self, file_list, playlist=None):
 
         self.stop_playing = False
@@ -41,6 +75,10 @@ class SoundApp():
                 self.mixer.music.play()
 
                 if self.azan_playing:
+                    break
+
+                # A check to not increase cursor
+                if self.stop_playing:
                     break
 
                 while self.mixer.music.get_busy():
@@ -64,12 +102,6 @@ class SoundApp():
 
 sound = SoundApp()
 
-quran_list_dir = os.listdir(f"{Path(__file__).parent.parent}/sound/quran") 
-quran_list = []
-for filename in quran_list_dir:
-    quran_list.append(os.path.join("sound/quran/", filename))
-
-song_list_dir = os.listdir(f"{Path(__file__).parent.parent}/sound/songs") 
 
 # Playlist class
 class PlayList(Listbox):
@@ -84,6 +116,12 @@ class PlayList(Listbox):
 
     # position: 0 -> from start, (itemcount - 1) -> from end
     def play(self, path, position=-1):
+
+        # Check if play has been clicked already
+        # Stop action to end the thread
+        # Then create a new music_thread 
+        if sound.music_thread != None:
+            sound.stop()
 
         selected = self.curselection()
 
@@ -103,27 +141,9 @@ class PlayList(Listbox):
             
             if sound.mixer.music.get_busy():
                 sound.stop()
+
             sound.music_thread = Thread(target=sound.playAll, args=(filelist, self,), daemon=True)
             sound.music_thread.start()
 
     def stop(self):
         sound.stop()
-
-def play_quran(is_playing):
-   
-    # button click while no sound is playing
-    if is_playing["val"] == False:
-        is_playing["val"] = True
-        
-        random.shuffle(quran_list)
-
-        # creatte a thread to run music in background
-        # daemon option terminates the thread when the program closes
-        sound.music_thread = Thread(target=sound.playAll, args=(quran_list,), daemon=True)
-        sound.music_thread.start()
-            
-    # stop playing sound 
-    else:
-        is_playing["val"] = False
-        sound.stop()
-    

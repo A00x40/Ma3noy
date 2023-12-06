@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+import random
 import math
 from datetime import date
 import schedule
@@ -50,6 +53,7 @@ def doubleToHrMin(number):
     d.append(minutes_)
     return d
 
+# Algorithm to calculate prayer times in current day
 def calcPrayerTimes(year,month,day,longitude,latitude,timeZone,fajrTwilight,ishaTwilight):
     prayer_time=[]
     D1 = (367 * year) - ((year + int((month + 9) / 12)) * 7 / 4) + ((int(275 * month / 9)) + day - 730531.5)
@@ -97,9 +101,24 @@ def calcPrayerTimes(year,month,day,longitude,latitude,timeZone,fajrTwilight,isha
     prayer_time.append(ishaTime1)
     return prayer_time
 
+
+quran_list_dir = os.listdir(f"{Path(__file__).parent.parent}/sound/quran") 
+quran_list = []
+for filename in quran_list_dir:
+    quran_list.append(os.path.join("sound/quran/", filename))
+
+song_list_dir = os.listdir(f"{Path(__file__).parent.parent}/sound/songs") 
+song_list = []
+for filename in song_list_dir:
+    song_list.append(os.path.join("sound/songs/", filename))
+
 class Schedules():
     fajrTwilight = -18.5
     ishaTwilight = -17.35
+
+    #-------------------------- Schedual Time--------------------------#
+    Quraan_Time = [6,12]
+    Song_Time = [12,19]
 
     def __init__(self,l,lng,tz):
         currdate = date.today()
@@ -117,6 +136,25 @@ class Schedules():
 
         for i in range(len(calculated)):
             self.prayer_times[names[i]] = doubleToHrMin(calculated[i])
+
+    def play_daily(self, is_playing):
+       
+        # button click while no sound is playing
+        if is_playing["val"] == False:
+            is_playing["val"] = True
+        
+            random.shuffle(quran_list)
+            random.shuffle(song_list)
+
+            # create a thread to run music in background
+            # daemon option terminates the thread when the program closes
+            sound.music_thread = Thread(target=sound.playDaily, args=( [(quran_list, self.Quraan_Time), (song_list, self.Song_Time)] , ), daemon=True)
+            sound.music_thread.start()
+            
+            # stop playing sound 
+        else:
+            is_playing["val"] = False
+            sound.stop()
 
     def playAzan(self):
         sound.play("sound/azan.mp3", True)
@@ -137,6 +175,6 @@ class Schedules():
                 mm = '0' + mm
           
             schedule.every().day.at(hh+":"+mm).do(self.playAzan)
-        schedule.every().day.at("21:36").do(self.playAzan)
+        
         t = Thread(target=self.run_schedule, daemon=True)
         t.start()

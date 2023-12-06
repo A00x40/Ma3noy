@@ -1,6 +1,6 @@
 import tkinter as tk
-from playsound import sound, PlayList, play_quran, quran_list_dir, song_list_dir
-from schedules import Schedules
+from playsound import sound, PlayList
+from schedules import Schedules, quran_list_dir, song_list_dir
 
 window_width = 600
 window_height = 500
@@ -47,6 +47,10 @@ class tkinterApp(tk.Tk):
         frame = self.frames[container]
         frame.tkraise()
 
+# Schedule prayers
+sc = Schedules(30.033333,31.233334,2)
+sc.schedule_prayers()
+    
 # First window frame startpage
 class StartPage(tk.Frame):
     
@@ -69,10 +73,10 @@ class StartPage(tk.Frame):
         label.place(relx=.5, rely=.1, anchor="center")
 
         # button (تشغيل اليومي)
-        quran_btn = tk.Button(self, text="اليومي", font=('Arial 14 bold'), width=10, height=1,
-                              command=lambda: play_quran(self.playing))
+        daily_btn = tk.Button(self, text="اليومي", font=('Arial 14 bold'), width=10, height=1,
+                              command=lambda: sc.play_daily(self.playing))
 
-        quran_btn.place(relx=.8, rely=.3, anchor="se")
+        daily_btn.place(relx=.8, rely=.3, anchor="se")
 
         # button (الذهاب لصفحة القرءان)
         quran_btn = tk.Button(self, text="القرءان", font=('Arial 14 bold'), width=10, height=1,
@@ -217,9 +221,6 @@ class SongPage(tk.Frame):
 
 
 def main():
-    sc = Schedules(30.033333,31.233334,2)
-    sc.schedule_prayers()
-    
     app = tkinterApp()
 
     app.mainloop()
